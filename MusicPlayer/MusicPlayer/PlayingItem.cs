@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Serialization;
 
 namespace MusicPlayer
 {
-   abstract class PlayingItem<T>
+   public abstract class PlayingItem<T>
     {
         public int Duration;
         public string Name;
@@ -25,6 +26,5 @@ namespace MusicPlayer
         {
             _like = false;
         }
-        public abstract T CreateItems();
     }
 }

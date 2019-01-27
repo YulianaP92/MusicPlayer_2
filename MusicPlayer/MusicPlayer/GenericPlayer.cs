@@ -2,18 +2,19 @@
 using System.Collections.Generic;
 using System.Linq;
 using MusicPlayer.Visualization;
+using System.IO;
 using System.Threading.Tasks;
 
 namespace MusicPlayer
 {
-   abstract class GenericPlayer<T>where T:Song
+   public abstract class GenericPlayer<T> where T : PlayingItem<T>
     {
         private const int minVolume = 0;
         private const int maxVolume = 300;
         private int _volume;
+        private ISkin skin;
         public bool Locked;
         public bool Playing;
-        private ISkin skin;
         public GenericPlayer()
         {
 
@@ -99,13 +100,12 @@ namespace MusicPlayer
             if (!Locked)
             {
                 Playing = true;
-                Console.WriteLine("Player is playing");               
+                Console.WriteLine("Player is playing");
             }
             else
                 Console.WriteLine("Player is locked");
             return Playing;
         }
-        public abstract List<T> GetItems();            
         public List<T> SortByTitle(List<T> item)
         {
             List<string> name = new List<string>();
@@ -134,31 +134,6 @@ namespace MusicPlayer
                 Console.WriteLine($"The item is played: {item.Name}");
             }
         }
-        public (string name, (int hours, int minutes, int seconds), bool play) GetItemData(T item)
-        {
-            return (
-                item.Name,
-                (item.Duration / 3600,
-                (item.Duration % 3600) / 60,
-                (item.Duration % 3600) % 60
-                ),
-                item.PlayItem);
-        }
-
-        public void ListItems(List<T> items, T includeItem)
-        {
-            IncludeItem(includeItem);
-            for (int i = 0; i < items.Count; i++)
-            {
-                var item = GetItemData(items[i]);
-                Console.WriteLine($"{item.name}-{item.play} - {item.Item2.hours}:{item.Item2.minutes}:{item.Item2.seconds}");
-            }
-        }
-        public void GetSongData_2(T item)
-        {
-            (string name, _, int durationMinutes, _) = item;
-            Console.WriteLine($"{name} - {durationMinutes}");
-        }
 
         public static ISkin GetSkin()
         {
@@ -184,7 +159,7 @@ namespace MusicPlayer
         }
         public void TraceInfo(List<T> Item)
         {
-            skin.Clear();
+           // skin.Clear();
             foreach (var i in Item)
             {
                 skin.Render(SkinString(i));
@@ -192,6 +167,11 @@ namespace MusicPlayer
         }
         public abstract string SkinString(T item);
         public abstract List<T> FilterByGenre(List<T> items, string genry);
-  
+        public abstract List<T> Load(string path);      
+        public void Clear(List<T>items)
+        {
+            items.Clear();
+            Console.WriteLine("\nList cleared");
+        }
     }
 }

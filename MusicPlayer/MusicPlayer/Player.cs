@@ -2,43 +2,15 @@
 using System.Collections.Generic;
 using System.Linq;
 using MusicPlayer.Extensions;
-using MusicPlayer.Visualization;
+using System.IO;
+using System.Xml.Serialization;
 
 namespace MusicPlayer
 {
-   class Player:GenericPlayer<Song>
+   public class Player : GenericPlayer<Song>
     {
-        
-        public List<Song> Song;
-        public override List<Song> GetItems()
-        {
-            List<Artist> artists = new List<Artist>()
-            {
-                new Artist("Queen", "Rock"),
-                new Artist("Marilyn Manson", "Rock"),
-                new Artist("Maroon 5", "Rock"),
-                new Artist("Nirvana", "Rock"),
-                new Artist("Green Day","Rock")
-            };
-            List<Album> album = new List<Album>()
-            {
-                new Album("Queen II", 1974),
-                new Album("Sweet Dreams", 2000),
-                new Album("Makes Me Wonder", 2008),
-                new Album("Nevermind", 1991),
-                new Album("Greatest", 2017)
-            };
 
-            List<Song> songs = new List<Song>()
-            {
-                new Song(120, "I want to break free", artists[0], album[0]),
-                new Song(130, "Bowling for Columbine", artists[1], album[1]),
-                new Song(200, "Makes Me Wonder", artists[2], album[2]),
-                new Song(240, "Flash Gordon", artists[3], album[3]),
-                new Song(300, "Windowpane", artists[4], album[4])
-            };
-            return songs;
-        }
+        public List<Song> Song;
         public override string SkinString(Song song)
         {
             string list;
@@ -65,6 +37,62 @@ namespace MusicPlayer
         {
             var sortedName = songs.Where(u => u.Artist._Genre == genry).OrderBy(u => u.Name).ToList();
             return sortedName;
+        }
+
+        //AL6-Player1/2-AudioFiles.
+        public override List<Song> Load(string path)
+        {
+            Song = new List<Song>();
+            DirectoryInfo directory = new DirectoryInfo(path);
+            if (directory.Exists)
+            {
+                var files = directory.GetFiles("*.mp3");
+                for (int i = 0; i < files.Length; i++)
+                {
+                    if (files[i].Exists)
+                    {
+                        var song = new Song()
+                        {
+                            Duration = (int)files[i].Length,
+                            Name = files[i].Name,
+                        };
+                        Song.Add(song);
+                        Console.WriteLine($"Name song: {song.Name}\nDuration: {song.Duration}");                       
+                    }                    
+                    else
+                        Console.WriteLine("No files exist");
+                }
+            }
+            else
+            {
+                Console.WriteLine("No folders exist");
+            }
+            return Song;
+        }
+
+        //AL6-Player2/2-PlaylistSrlz
+        public void SaveAsPlaylist(List<Song> songs)
+        {           
+            XmlSerializer formatter = new XmlSerializer(typeof(List<Song>));
+            using (FileStream fs = new FileStream(@"D:/ListSongs.xml", FileMode.OpenOrCreate))
+            {
+                formatter.Serialize(fs, songs);
+                Console.WriteLine("Serialization was successful");
+            }
+        }
+        public List<Song> LoadPlaylist()
+        {
+            List<Song> newsongs;
+            XmlSerializer formatter = new XmlSerializer(typeof(List<Song>));
+            using (FileStream fs = new FileStream(@"D:/ListSongs.xml", FileMode.OpenOrCreate))
+            {
+                newsongs = (List<Song>)formatter.Deserialize(fs);
+                foreach (var i in newsongs)
+                {
+                    Console.WriteLine($"Name: {i.Name}\nDutation: {i.Duration}\nPlayItem: {i.PlayItem}\nLike{i._like}");
+                }
+            }
+            return newsongs;
         }
     }
 }

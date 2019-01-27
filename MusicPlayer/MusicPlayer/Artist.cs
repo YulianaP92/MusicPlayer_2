@@ -1,7 +1,14 @@
-﻿namespace MusicPlayer
+﻿using System;
+using System.Xml.Serialization;
+
+namespace MusicPlayer
 {
-    class Artist
+    public class Artist
     {
+        public Artist()
+        {
+
+        }
         public enum Genre
         {
             Rock,
