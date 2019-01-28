@@ -4,6 +4,7 @@ using System.Linq;
 using MusicPlayer.Visualization;
 using System.IO;
 using System.Threading.Tasks;
+using System.Xml;
 
 namespace MusicPlayer
 {
@@ -167,11 +168,9 @@ namespace MusicPlayer
         }
         public abstract string SkinString(T item);
         public abstract List<T> FilterByGenre(List<T> items, string genry);
-        public abstract List<T> Load(string path);      
-        public void Clear(List<T>items)
-        {
-            items.Clear();
-            Console.WriteLine("\nList cleared");
-        }
+        public abstract void Load(string path);
+
+        public abstract void Clear();
+       
     }
 }

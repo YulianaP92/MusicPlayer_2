@@ -4,6 +4,7 @@ using System.Linq;
 using MusicPlayer.Extensions;
 using System.IO;
 using System.Xml.Serialization;
+using System.Xml;
 
 namespace MusicPlayer
 {
@@ -38,10 +39,14 @@ namespace MusicPlayer
             var sortedName = songs.Where(u => u.Artist._Genre == genry).OrderBy(u => u.Name).ToList();
             return sortedName;
         }
-
         //AL6-Player1/2-AudioFiles.
-        public override List<Song> Load(string path)
+        public override void Clear()
         {
+            Song.Clear();
+            Console.WriteLine("\nList cleared");
+        }
+        public override void Load(string path)
+        {          
             Song = new List<Song>();
             DirectoryInfo directory = new DirectoryInfo(path);
             if (directory.Exists)
@@ -67,32 +72,28 @@ namespace MusicPlayer
             {
                 Console.WriteLine("No folders exist");
             }
-            return Song;
         }
-
         //AL6-Player2/2-PlaylistSrlz
-        public void SaveAsPlaylist(List<Song> songs)
+        public void SaveAsPlaylist(string path)
         {           
             XmlSerializer formatter = new XmlSerializer(typeof(List<Song>));
-            using (FileStream fs = new FileStream(@"D:/ListSongs.xml", FileMode.OpenOrCreate))
+            using (FileStream fs = new FileStream(path, FileMode.OpenOrCreate))
             {
-                formatter.Serialize(fs, songs);
+                formatter.Serialize(fs, Song);
                 Console.WriteLine("Serialization was successful");
             }
         }
-        public List<Song> LoadPlaylist()
+        public void LoadPlaylist(string path)
         {
-            List<Song> newsongs;
             XmlSerializer formatter = new XmlSerializer(typeof(List<Song>));
-            using (FileStream fs = new FileStream(@"D:/ListSongs.xml", FileMode.OpenOrCreate))
+            using (FileStream fs = new FileStream(path, FileMode.OpenOrCreate))
             {
-                newsongs = (List<Song>)formatter.Deserialize(fs);
-                foreach (var i in newsongs)
+                Song = (List<Song>)formatter.Deserialize(fs);
+                foreach (var i in Song)
                 {
                     Console.WriteLine($"Name: {i.Name}\nDutation: {i.Duration}\nPlayItem: {i.PlayItem}\nLike{i._like}");
                 }
             }
-            return newsongs;
         }
     }
 }
