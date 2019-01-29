@@ -10,11 +10,11 @@ namespace MusicPlayer
     {
         static void Main(string[] args)
         {
-            var player = new Player();
-            var song = new Song();
-            List<Song> songs = player.GetItems();
-            player.TraceInfo(songs);
-
+            using (var player = new Player())
+            {
+                player.Load(@"D:\Music");               
+            }
+            
             Console.ReadLine();
         }
        

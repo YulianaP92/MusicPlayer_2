@@ -2,43 +2,17 @@
 using System.Collections.Generic;
 using System.Linq;
 using MusicPlayer.Extensions;
-using MusicPlayer.Visualization;
+using System.IO;
+using System.Xml.Serialization;
+using System.Media;
 
 namespace MusicPlayer
 {
-   class Player:GenericPlayer<Song>
+    public class Player : GenericPlayer<Song>, IDisposable
     {
-        
         public List<Song> Song;
-        public override List<Song> GetItems()
-        {
-            List<Artist> artists = new List<Artist>()
-            {
-                new Artist("Queen", "Rock"),
-                new Artist("Marilyn Manson", "Rock"),
-                new Artist("Maroon 5", "Rock"),
-                new Artist("Nirvana", "Rock"),
-                new Artist("Green Day","Rock")
-            };
-            List<Album> album = new List<Album>()
-            {
-                new Album("Queen II", 1974),
-                new Album("Sweet Dreams", 2000),
-                new Album("Makes Me Wonder", 2008),
-                new Album("Nevermind", 1991),
-                new Album("Greatest", 2017)
-            };
-
-            List<Song> songs = new List<Song>()
-            {
-                new Song(120, "I want to break free", artists[0], album[0]),
-                new Song(130, "Bowling for Columbine", artists[1], album[1]),
-                new Song(200, "Makes Me Wonder", artists[2], album[2]),
-                new Song(240, "Flash Gordon", artists[3], album[3]),
-                new Song(300, "Windowpane", artists[4], album[4])
-            };
-            return songs;
-        }
+        private SoundPlayer soundPlayer;
+        private FileStream fs;
         public override string SkinString(Song song)
         {
             string list;
@@ -61,10 +35,100 @@ namespace MusicPlayer
         {
             Song.Sort();
         }
-        public override List<Song> FilterByGenre(List<Song> songs, string genry)
+        public override List<Song> FilterByGenre(string genry)
         {
-            var sortedName = songs.Where(u => u.Artist._Genre == genry).OrderBy(u => u.Name).ToList();
+            var sortedName = Song.Where(u => u.Artist._Genre == genry).OrderBy(u => u.Name).ToList();
             return sortedName;
+        }
+        public override void Clear()
+        {
+            Song.Clear();
+            Console.WriteLine("\nList cleared");
+        }
+        public override void Load(string path)
+        {
+            Song = new List<Song>();
+            DirectoryInfo directory = new DirectoryInfo(path);
+            if (directory.Exists)
+            {
+                var files = directory.GetFiles("*.wav");
+                for (int i = 0; i < files.Length; i++)
+                {
+                    if (files[i].Exists)
+                    {
+                        var song = new Song()
+                        {
+                            Duration = (int)files[i].Length,
+                            Name = files[i].Name,
+                        };
+                        Song.Add(song);
+                        Console.Clear();
+                        Console.WriteLine(song.Name);
+                        soundPlayer = new SoundPlayer();
+                        soundPlayer.SoundLocation = files[i].FullName;//текущий проигрываемый объект
+                        soundPlayer.PlaySync();
+                        System.Threading.Thread.Sleep(2000);
+                    }
+                    else
+                        Console.WriteLine("No files exist");
+                }
+            }
+            else
+            {
+                Console.WriteLine("No folders exist");
+            }
+        }
+        public void SaveAsPlaylist(string path)
+        {
+            XmlSerializer formatter = new XmlSerializer(typeof(List<Song>));
+            fs = new FileStream(path, FileMode.OpenOrCreate);
+            formatter.Serialize(fs, Song);
+            Console.WriteLine("Serialization was successful");
+        }
+        public void LoadPlaylist(string path)
+        {
+            XmlSerializer formatter = new XmlSerializer(typeof(List<Song>));
+            fs = new FileStream(path, FileMode.OpenOrCreate);
+            Song = (List<Song>)formatter.Deserialize(fs);
+            foreach (var i in Song)
+            {
+                Console.WriteLine($"Name: {i.Name}\nDutation: {i.Duration}\nPlayItem: {i.PlayItem}\nLike{i._like}");
+            }
+        }
+
+        //AL4-Player1/1. IDisposable.
+        private bool _disposed = false;//флаг, вызывался ли объектом метод Dispose()
+        public void Dispose()
+        {
+            Dispose(true);//вызов виртуального метода
+            GC.SuppressFinalize(this);//сообщаем сборщику мусора, что наш объект уже освободил ресурсы
+        }
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!_disposed)
+            {
+                if (disposing)
+                {
+                    // освобождаем управляемые ресурсы 
+                    Song = null;
+                    if (fs != null)
+                    {
+                        fs.Dispose();
+                        fs = null;
+                    }
+                    if (soundPlayer != null)
+                    {
+                        soundPlayer.Dispose();
+                        soundPlayer = null;
+                    }
+                }
+                // освобождаем НЕУПРАВЛЯЕМЫЕ ресурсы 
+            }
+            _disposed = true;
+        }
+        ~Player()
+        {
+            Dispose(false);//false указывает,что очистка была инициирована сборщиком мусора
         }
     }
 }

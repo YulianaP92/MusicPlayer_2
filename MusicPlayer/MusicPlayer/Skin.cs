@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace MusicPlayer
 {
-    interface ISkin
+   public interface ISkin
     {
         void Clear();//очистка экрана плеера
         void Render(string text);//вывод строки на экран плеера
