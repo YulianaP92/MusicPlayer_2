@@ -5,6 +5,7 @@ using MusicPlayer.Visualization;
 using System.IO;
 using System.Threading.Tasks;
 using System.Xml;
+using System.Media;
 
 namespace MusicPlayer
 {
@@ -95,13 +96,14 @@ namespace MusicPlayer
                 Console.WriteLine("Player is locked");
             return Playing;
         }
-        public bool Start(List<T> items, bool loop = false)
+        public bool Start(bool loop = false)
         {
 
             if (!Locked)
             {
                 Playing = true;
                 Console.WriteLine("Player is playing");
+               
             }
             else
                 Console.WriteLine("Player is locked");
@@ -167,7 +169,7 @@ namespace MusicPlayer
             }
         }
         public abstract string SkinString(T item);
-        public abstract List<T> FilterByGenre(List<T> items, string genry);
+        public abstract List<T> FilterByGenre(string genry);
         public abstract void Load(string path);
 
         public abstract void Clear();

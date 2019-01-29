@@ -4,14 +4,15 @@ using System.Linq;
 using MusicPlayer.Extensions;
 using System.IO;
 using System.Xml.Serialization;
-using System.Xml;
+using System.Media;
 
 namespace MusicPlayer
 {
-   public class Player : GenericPlayer<Song>
+    public class Player : GenericPlayer<Song>, IDisposable
     {
-
         public List<Song> Song;
+        private SoundPlayer soundPlayer;
+        private FileStream fs;
         public override string SkinString(Song song)
         {
             string list;
@@ -34,24 +35,23 @@ namespace MusicPlayer
         {
             Song.Sort();
         }
-        public override List<Song> FilterByGenre(List<Song> songs, string genry)
+        public override List<Song> FilterByGenre(string genry)
         {
-            var sortedName = songs.Where(u => u.Artist._Genre == genry).OrderBy(u => u.Name).ToList();
+            var sortedName = Song.Where(u => u.Artist._Genre == genry).OrderBy(u => u.Name).ToList();
             return sortedName;
         }
-        //AL6-Player1/2-AudioFiles.
         public override void Clear()
         {
             Song.Clear();
             Console.WriteLine("\nList cleared");
         }
         public override void Load(string path)
-        {          
+        {
             Song = new List<Song>();
             DirectoryInfo directory = new DirectoryInfo(path);
             if (directory.Exists)
             {
-                var files = directory.GetFiles("*.mp3");
+                var files = directory.GetFiles("*.wav");
                 for (int i = 0; i < files.Length; i++)
                 {
                     if (files[i].Exists)
@@ -62,8 +62,13 @@ namespace MusicPlayer
                             Name = files[i].Name,
                         };
                         Song.Add(song);
-                        Console.WriteLine($"Name song: {song.Name}\nDuration: {song.Duration}");                       
-                    }                    
+                        Console.Clear();
+                        Console.WriteLine(song.Name);
+                        soundPlayer = new SoundPlayer();
+                        soundPlayer.SoundLocation = files[i].FullName;//текущий проигрываемый объект
+                        soundPlayer.PlaySync();
+                        System.Threading.Thread.Sleep(2000);
+                    }
                     else
                         Console.WriteLine("No files exist");
                 }
@@ -73,27 +78,57 @@ namespace MusicPlayer
                 Console.WriteLine("No folders exist");
             }
         }
-        //AL6-Player2/2-PlaylistSrlz
         public void SaveAsPlaylist(string path)
-        {           
+        {
             XmlSerializer formatter = new XmlSerializer(typeof(List<Song>));
-            using (FileStream fs = new FileStream(path, FileMode.OpenOrCreate))
-            {
-                formatter.Serialize(fs, Song);
-                Console.WriteLine("Serialization was successful");
-            }
+            fs = new FileStream(path, FileMode.OpenOrCreate);
+            formatter.Serialize(fs, Song);
+            Console.WriteLine("Serialization was successful");
         }
         public void LoadPlaylist(string path)
         {
             XmlSerializer formatter = new XmlSerializer(typeof(List<Song>));
-            using (FileStream fs = new FileStream(path, FileMode.OpenOrCreate))
+            fs = new FileStream(path, FileMode.OpenOrCreate);
+            Song = (List<Song>)formatter.Deserialize(fs);
+            foreach (var i in Song)
             {
-                Song = (List<Song>)formatter.Deserialize(fs);
-                foreach (var i in Song)
-                {
-                    Console.WriteLine($"Name: {i.Name}\nDutation: {i.Duration}\nPlayItem: {i.PlayItem}\nLike{i._like}");
-                }
+                Console.WriteLine($"Name: {i.Name}\nDutation: {i.Duration}\nPlayItem: {i.PlayItem}\nLike{i._like}");
             }
+        }
+
+        //AL4-Player1/1. IDisposable.
+        private bool _disposed = false;//флаг, вызывался ли объектом метод Dispose()
+        public void Dispose()
+        {
+            Dispose(true);//вызов виртуального метода
+            GC.SuppressFinalize(this);//сообщаем сборщику мусора, что наш объект уже освободил ресурсы
+        }
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!_disposed)
+            {
+                if (disposing)
+                {
+                    // освобождаем управляемые ресурсы 
+                    Song = null;
+                    if (fs != null)
+                    {
+                        fs.Dispose();
+                        fs = null;
+                    }
+                    if (soundPlayer != null)
+                    {
+                        soundPlayer.Dispose();
+                        soundPlayer = null;
+                    }
+                }
+                // освобождаем НЕУПРАВЛЯЕМЫЕ ресурсы 
+            }
+            _disposed = true;
+        }
+        ~Player()
+        {
+            Dispose(false);//false указывает,что очистка была инициирована сборщиком мусора
         }
     }
 }

@@ -10,12 +10,11 @@ namespace MusicPlayer
     {
         static void Main(string[] args)
         {
-            var player = new Player();
-
-            player.Load(@"D:\Music");
-            player.SaveAsPlaylist(@"D:/ListSongs.xml");
-            player.LoadPlaylist(@"D:/ListSongs.xml");
-            //playler.Play();
+            using (var player = new Player())
+            {
+                player.Load(@"D:\Music");               
+            }
+            
             Console.ReadLine();
         }
        

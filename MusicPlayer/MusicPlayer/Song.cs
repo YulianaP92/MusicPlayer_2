@@ -28,6 +28,8 @@ namespace MusicPlayer
             Album_ = album;
             Lyrics = "Текст песни";
         }
+
+
         public int CompareTo(object obj)
         {
             return this.Name?.CompareTo((obj as Song)?.Name) ?? 0;
