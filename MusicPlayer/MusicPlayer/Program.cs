@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace MusicPlayer
 {
@@ -16,23 +17,38 @@ namespace MusicPlayer
             player.PlayerLocked += Show;
             player.PlayerUnlocked += Show;
 
-            player.Start();
-            player.Load(@"D:\Music");
-            player.Play();
-            player.VolumeUp();
-
-            player.Play();
-            player.Lock();
-
-            player.Play();
-            player.Unlock();
-
+            VisualizerAsync(player);
+            if (Player.flag)
+            {
+                player.Play();
+            }           
             Console.ReadLine();
+        }
+        //LA8.Player2/2**. AsyncCommands.
+        public static async void VisualizerAsync(Player player)
+        {
+            Console.WriteLine("Select the required command");
+            var variant = Console.ReadLine();
+            switch (variant)
+            {
+                case "1":
+                   await Task.Run(()=>player.Start());
+                    break;                    
+                case "2":
+                    await Task.Run(() => player.Stop());
+                    break;
+                case "3":
+                    await Task.Run(() => player.Load(Console.ReadLine()));//@"D:\Music"
+                    break;
+                default:
+                    VisualizerAsync(player);
+                    break;
+            }
         }
         private static void TraceInfo(List<Song> songs, Song playingSong, bool locked, int volume)
         {
             Console.Clear();// remove old data
-
+            
             //Render the list of songs
             foreach (var song in songs)
             {

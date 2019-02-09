@@ -4,6 +4,7 @@ using System.Linq;
 using System.IO;
 using System.Xml.Serialization;
 using System.Media;
+using System.Threading.Tasks;
 
 namespace MusicPlayer
 {
@@ -24,6 +25,7 @@ namespace MusicPlayer
             Song.Clear();
             Console.WriteLine("\nList cleared");
         }
+        public static bool flag;
         public override void Load(string path)
         {
             Song = new List<Song>();
@@ -51,8 +53,10 @@ namespace MusicPlayer
                 Console.WriteLine("No folders exist");
             }
             SongsListChangedEvent?.Invoke(Song, null, Locked, Volume);
+            flag = true;
         }
-        public void Play()
+        //LA8.Player1/2. AsyncPlaySong.
+        public async void Play()
         {
             if (!Locked && Song.Count > 0)
             {
@@ -60,15 +64,18 @@ namespace MusicPlayer
             }
             if (Playing)
             {
-                for (int i = 0; i < Song.Count; i++)
+                await Task.Run(() =>
                 {
-                    soundPlayer = new SoundPlayer();
-                    SongStartedEvent?.Invoke(Song, Song[i], Locked, Volume);
-                    soundPlayer.SoundLocation = Song[i].Path;//текущий проигрываемый объект
-                    soundPlayer.PlaySync();
-                    System.Threading.Thread.Sleep(2000);
-                }
-            }
+                    for (int i = 0; i < Song.Count; i++)
+                    {
+                        soundPlayer = new SoundPlayer();
+                        SongStartedEvent?.Invoke(Song, Song[i], Locked, Volume);
+                        soundPlayer.SoundLocation = Song[i].Path;//текущий проигрываемый объект
+                        soundPlayer.PlaySync();
+                        System.Threading.Thread.Sleep(2000);
+                    }
+            });
+        }
             Playing = false;
         }
     }
