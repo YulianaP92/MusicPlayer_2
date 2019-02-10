@@ -46,19 +46,14 @@
   <ItemGroup>
     <Compile Include="Album.cs" />
     <Compile Include="Artist.cs" />
-    <Compile Include="Extensions\SongsExtensions.cs" />
-    <Compile Include="Extensions\StringSubstring.cs" />
+    <Compile Include="Exeptions\FailedToPlayException.cs" />
     <Compile Include="GenericPlayer.cs" />
     <Compile Include="Player.cs" />
+    <Compile Include="Exeptions\PlayerException.cs" />
     <Compile Include="PlayingItem.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Skin.cs" />
     <Compile Include="Song.cs" />
-    <Compile Include="Visualization\ClassicSkin.cs" />
-    <Compile Include="Visualization\ColorSkin.cs" />
-    <Compile Include="Visualization\ColorSkin_2.cs" />
-    <Compile Include="Visualization\СapslockSkin.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

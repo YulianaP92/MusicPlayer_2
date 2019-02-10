@@ -1,15 +1,13 @@
-﻿namespace MusicPlayer
+﻿using System;
+using System.Xml.Serialization;
+
+namespace MusicPlayer
 {
-    class Artist
+    public class Artist
     {
-        public enum Genre
+        public Artist()
         {
-            Rock,
-            Pop,
-            Classical,
-            Blues,
-            Dance,
-            Hip_hop
+
         }
         public string Name;
         public string _Genre;

@@ -1,70 +1,109 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using MusicPlayer.Extensions;
-using MusicPlayer.Visualization;
+using System.IO;
+using System.Media;
+using System.Threading.Tasks;
 
 namespace MusicPlayer
 {
-   class Player:GenericPlayer<Song>
+    public class Player : GenericPlayer<Song>
     {
-        
         public List<Song> Song;
-        public override List<Song> GetItems()
-        {
-            List<Artist> artists = new List<Artist>()
-            {
-                new Artist("Queen", "Rock"),
-                new Artist("Marilyn Manson", "Rock"),
-                new Artist("Maroon 5", "Rock"),
-                new Artist("Nirvana", "Rock"),
-                new Artist("Green Day","Rock")
-            };
-            List<Album> album = new List<Album>()
-            {
-                new Album("Queen II", 1974),
-                new Album("Sweet Dreams", 2000),
-                new Album("Makes Me Wonder", 2008),
-                new Album("Nevermind", 1991),
-                new Album("Greatest", 2017)
-            };
-
-            List<Song> songs = new List<Song>()
-            {
-                new Song(120, "I want to break free", artists[0], album[0]),
-                new Song(130, "Bowling for Columbine", artists[1], album[1]),
-                new Song(200, "Makes Me Wonder", artists[2], album[2]),
-                new Song(240, "Flash Gordon", artists[3], album[3]),
-                new Song(300, "Windowpane", artists[4], album[4])
-            };
-            return songs;
-        }
-        public override string SkinString(Song song)
-        {
-            string list;
-            list = $"Name Artist: {song.Artist.Name}\n" +
-            $"Name song: {song.Name}\n" +
-            $"Genre: {song.Artist._Genre}\n" +
-            $"Album: {song.Album.Name}\n" +
-            $"Year of album release: {song.Album.Year}\n" +
-            $"Duration song: {song.Duration} second\n" +
-            $"Lyrics: {song.Lyrics}\n\n";
-            return list;
-        }
-
-        public void Shuffle()
-        {
-            Song.Shuffle();
-        }
-
+        private SoundPlayer soundPlayer;
+        public event Action<List<Song>, Song, bool, int> SongStartedEvent;
+        public event Action<List<Song>, Song, bool, int> SongsListChangedEvent;
+        public event Action<string> OnError;
+        public event Action<string, string, ConsoleColor> OnWarning;
+        
         public void Sort()
         {
             Song.Sort();
         }
-        public override List<Song> FilterByGenre(List<Song> songs, string genry)
+        public override void Clear()
         {
-            var sortedName = songs.Where(u => u.Artist._Genre == genry).OrderBy(u => u.Name).ToList();
-            return sortedName;
+            Song.Clear();
+            Console.WriteLine("\nList cleared");
+        }
+        public static bool flag;
+        public override void Load(string path)
+        {
+            Song = new List<Song>();
+            DirectoryInfo directory = new DirectoryInfo(path);
+            if (directory.Exists)
+            {
+                var files = directory.GetFiles("*.wav");
+                for (int i = 0; i < files.Length; i++)
+                {
+                    if (files[i].Exists)
+                    {
+                        var song = new Song()
+                        {
+                            Name = files[i].Name,
+                            Path = files[i].FullName,
+                        };
+                        Song.Add(song);
+                    }
+                    else
+                        Console.WriteLine("No files exist");
+                }
+            }
+            else
+            {
+                Console.WriteLine("No folders exist");
+            }
+            SongsListChangedEvent?.Invoke(Song, null, Locked, Volume);
+            flag = true;
+        }
+        //AL5-Player1/2. ExceptionHandling.
+        //AL5-Player1/2. CustomExceptions.
+        //LA8.Player1/2. AsyncPlaySong.
+        public async Task PlayAsync()
+        {
+            if (!Locked && Song.Count > 0)
+            {
+                Playing = true;
+            }
+            if (Playing)
+            {
+                await Task.Run(() =>
+                {
+                    for (int i = 0; i < Song.Count; i++)
+                    {
+                        soundPlayer = new SoundPlayer();
+                        SongStartedEvent?.Invoke(Song, Song[i], Locked, Volume);
+                        try
+                        {
+                            if (File.Exists(Song[i].Path))                               
+                                soundPlayer.SoundLocation = Song[i].Path;//текущий проигрываемый объект
+                            else
+                                throw new FailedToPlayException("Your file not found!", Song[i].Path);
+                            if (soundPlayer.IsLoadCompleted)
+                                soundPlayer.PlaySync();                            
+                            else
+                                throw new FailedToPlayException("File format not supported", Song[i].Path);
+                            System.Threading.Thread.Sleep(2000);
+                        }
+                        //catch (FileNotFoundException ex)
+                        //{
+                        //    OnError?.Invoke(ex.Message);
+                        //}
+                        //catch (InvalidOperationException ex)
+                        //{
+                        //    OnError?.Invoke(ex.Message);
+                        //}
+                        catch (PlayerException ex)
+                        {
+                            var exNew = (FailedToPlayException)ex;
+                            OnWarning?.Invoke(exNew.Message, exNew.Path,ConsoleColor.Yellow);
+                        }
+                        catch (Exception ex)
+                        {
+                            OnError?.Invoke(ex.Message);
+                        }
+                    }
+                });
+            }
+            Playing = false;
         }
     }
 }

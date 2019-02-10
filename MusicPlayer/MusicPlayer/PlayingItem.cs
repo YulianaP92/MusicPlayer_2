@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace MusicPlayer
+﻿namespace MusicPlayer
 {
-   abstract class PlayingItem<T>
+    public abstract class PlayingItem<T>
     {
         public int Duration;
         public string Name;
@@ -25,6 +19,5 @@ namespace MusicPlayer
         {
             _like = false;
         }
-        public abstract T CreateItems();
     }
 }
