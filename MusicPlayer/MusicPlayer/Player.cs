@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.IO;
-using System.Xml.Serialization;
 using System.Media;
 using System.Threading.Tasks;
 
@@ -14,8 +12,9 @@ namespace MusicPlayer
         private SoundPlayer soundPlayer;
         public event Action<List<Song>, Song, bool, int> SongStartedEvent;
         public event Action<List<Song>, Song, bool, int> SongsListChangedEvent;
-
-
+        public event Action<string> OnError;
+        public event Action<string, string, ConsoleColor> OnWarning;
+        
         public void Sort()
         {
             Song.Sort();
@@ -42,11 +41,11 @@ namespace MusicPlayer
                             Name = files[i].Name,
                             Path = files[i].FullName,
                         };
-                        Song.Add(song);                       
+                        Song.Add(song);
                     }
                     else
                         Console.WriteLine("No files exist");
-                }              
+                }
             }
             else
             {
@@ -55,8 +54,10 @@ namespace MusicPlayer
             SongsListChangedEvent?.Invoke(Song, null, Locked, Volume);
             flag = true;
         }
+        //AL5-Player1/2. ExceptionHandling.
+        //AL5-Player1/2. CustomExceptions.
         //LA8.Player1/2. AsyncPlaySong.
-        public async void Play()
+        public async Task PlayAsync()
         {
             if (!Locked && Song.Count > 0)
             {
@@ -70,12 +71,38 @@ namespace MusicPlayer
                     {
                         soundPlayer = new SoundPlayer();
                         SongStartedEvent?.Invoke(Song, Song[i], Locked, Volume);
-                        soundPlayer.SoundLocation = Song[i].Path;//текущий проигрываемый объект
-                        soundPlayer.PlaySync();
-                        System.Threading.Thread.Sleep(2000);
+                        try
+                        {
+                            if (File.Exists(Song[i].Path))                               
+                                soundPlayer.SoundLocation = Song[i].Path;//текущий проигрываемый объект
+                            else
+                                throw new FailedToPlayException("Your file not found!", Song[i].Path);
+                            if (soundPlayer.IsLoadCompleted)
+                                soundPlayer.PlaySync();                            
+                            else
+                                throw new FailedToPlayException("File format not supported", Song[i].Path);
+                            System.Threading.Thread.Sleep(2000);
+                        }
+                        //catch (FileNotFoundException ex)
+                        //{
+                        //    OnError?.Invoke(ex.Message);
+                        //}
+                        //catch (InvalidOperationException ex)
+                        //{
+                        //    OnError?.Invoke(ex.Message);
+                        //}
+                        catch (PlayerException ex)
+                        {
+                            var exNew = (FailedToPlayException)ex;
+                            OnWarning?.Invoke(exNew.Message, exNew.Path,ConsoleColor.Yellow);
+                        }
+                        catch (Exception ex)
+                        {
+                            OnError?.Invoke(ex.Message);
+                        }
                     }
-            });
-        }
+                });
+            }
             Playing = false;
         }
     }

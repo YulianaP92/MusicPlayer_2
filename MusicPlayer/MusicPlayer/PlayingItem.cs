@@ -1,13 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Serialization;
-
-namespace MusicPlayer
+﻿namespace MusicPlayer
 {
-   public abstract class PlayingItem<T>
+    public abstract class PlayingItem<T>
     {
         public int Duration;
         public string Name;

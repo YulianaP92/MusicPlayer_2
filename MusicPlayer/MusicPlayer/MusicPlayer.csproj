@@ -46,8 +46,10 @@
   <ItemGroup>
     <Compile Include="Album.cs" />
     <Compile Include="Artist.cs" />
+    <Compile Include="Exeptions\FailedToPlayException.cs" />
     <Compile Include="GenericPlayer.cs" />
     <Compile Include="Player.cs" />
+    <Compile Include="Exeptions\PlayerException.cs" />
     <Compile Include="PlayingItem.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
